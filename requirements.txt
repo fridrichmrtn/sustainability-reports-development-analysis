@@ -1,0 +1,9 @@
+requests
+python-magic
+pandas
+openpyxl
+numpy
+matplotlib
+seaborn
+ipykernel
+pytessaract
