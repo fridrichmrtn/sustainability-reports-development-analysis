@@ -6,4 +6,7 @@ numpy
 matplotlib
 seaborn
 ipykernel
-pytessaract
+image
+pillow
+pytesseract
+joblib
