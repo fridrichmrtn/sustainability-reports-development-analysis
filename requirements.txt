@@ -10,3 +10,4 @@ image
 pillow
 pytesseract
 joblib
+fasttext
