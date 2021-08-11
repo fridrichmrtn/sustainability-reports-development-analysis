@@ -11,3 +11,7 @@ pillow
 pytesseract
 joblib
 fasttext
+scikit-learn
+spacy
+rake-spacy
+networkx
