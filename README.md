@@ -6,7 +6,7 @@ The repository contains our work on extraction pipeline &amp; analysis of corpor
 ```
 ├──doc
     ├── preliminary-analysis
-    │   ├── overall-report.md # full dataset
+    │   ├── preliminary-data-analysis.ipynb # first attempt
 ```
 
 ## Links
