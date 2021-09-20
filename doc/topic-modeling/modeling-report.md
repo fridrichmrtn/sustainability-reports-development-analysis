@@ -43,12 +43,12 @@ as_tibble(head(raw_docs))
 In this section, we outline and implement covariate, character, document
 & token level transformation steps. Covariates transformation include
 datetime conversion & state extraction. Character level processing
-transforms the tweets to lower case, removes XML tags, removes links,
+transforms the docs to lower case, removes XML tags, removes links,
 unusual characters, and collapses multiple spaces. Document-level
-processing is conservative; we keep only tweets written in English and
+processing is conservative; we keep only docs written in English and
 originated in the US/UK. Consequently, we annotate the tokens with
-`udpipe` and retain only `VERB`, `ADJ` & `NOUN` observed in at least ten
-separate tweets.
+`udpipe` and retain only `VERB`, `ADJ` & `NOUN` observed in at least 250
+separate docs.
 
 ### Character & document-level processing
 
@@ -185,10 +185,10 @@ meta = processed$meta
 ## Exploratory data analysis
 
 Within this section, we extract & examine selected properties of the
-processed tweets.
+processed docs.
 
 ``` r
-# tweets per year
+# per year
 barplot(table(meta$economy_type),
      main="no of participants",
      xlab="economy type",
@@ -204,20 +204,20 @@ since. The behavior is aligned with what we see in the original data
 set.
 
 ``` r
-# tokens & chars per tweet
+# tokens & chars per doc
 n_chars = nchar(meta$text)
 n_tokens = stringr::str_count(meta$text, "\\w+")
 
 par(mfrow=c(1,2))
 hist(n_chars,
-     main="no of characters per tweet",
+     main="no of characters per doc",
      ylab="frequency",
      xlab="character count",
      cex.main=0.8,
      cex.axis=0.8,
      cex.lab=0.8)
 hist(n_tokens,
-     main="no of tokens per tweet",
+     main="no of tokens per doc",
      ylab="frequency",
      xlab="token count",
      cex.main=0.8,
@@ -364,12 +364,12 @@ plot(stm_model, type="labels", labeltype = "score", main="score",
 <img src="img/modeling-report/topic_labeling-1.png" style="display: block; margin: auto;" />
 
 Furthermore, latent factors are examined from the perspective of the
-most representative documents. For each topic, we extract only tweets
-with a prevalence of 25 % or higher. For each tweet, original raw text
-is printed.
+most representative documents. For each topic, we extract only docs with
+a prevalence of 25 % or higher. For each doc, original raw text is
+printed.
 
 ``` r
-# top tweets per topic
+# top docs per topic
 ft = findThoughts(stm_model, texts=meta$text, topics=1:stm_model$settings$dim$K,
   thresh=0.25, meta=meta)
 ft_df = lapply(names(ft$index),
@@ -422,7 +422,7 @@ plot(ee, model=stm_model, topics=1:stm_model$settings$dim$K, method="difference"
 
 The topic model allows for correlation between topics; positive
 correlation suggests that both subjects are likely to be discussed
-within one tweet. We construct a network with positive correlations
+within one doc. We construct a network with positive correlations
 between factors, we ignore the asymptotic p-values.
 
 ``` r
