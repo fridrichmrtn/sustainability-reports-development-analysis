@@ -1,4 +1,5 @@
 /.vscode/
 /env/
-/data/
+/data/*
+!/data/model-perspective/
 .Rproj.user
