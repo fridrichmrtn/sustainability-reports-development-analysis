@@ -1,4 +1,4 @@
-\#zerowaste subset - topic modeling report
+Corporate social responsibility - topic modeling report
 ================
 
 > Martin Fridrich 09/2021
