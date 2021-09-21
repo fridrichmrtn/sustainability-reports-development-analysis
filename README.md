@@ -5,7 +5,8 @@ The repository contains our work on extraction pipeline &amp; analysis of corpor
 
 ```
 ├──data
-    ├── model-perspective # summaries 
+    ├── model-perspective # summaries
+     
 ├──doc
     ├── preliminary-analysis
     │   ├── preliminary-data-analysis.ipynb # first attempt
