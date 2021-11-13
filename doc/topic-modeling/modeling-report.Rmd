@@ -35,14 +35,14 @@ library(tidygraph)
 library(ggraph)
 ```
 
-```{r eval=F}
+```{r }
 data_dir = "..//..//data//"
-csv_to_load = paste0(data_dir, list.files(data_dir, pattern="docs-reconstructed.csv"))
+csv_to_load = paste0(data_dir, list.files(data_dir, pattern="texts.csv"))
 raw_docs = data.table::fread(csv_to_load, data.table=F, na.strings="", nThread=4)
 raw_docs = raw_docs %>% janitor::clean_names() %>% as.data.frame()
-raw_docs = raw_docs[,c("v1", "participant", "sector", "country", "economy_type", "output_text")]
-names(raw_docs) = c("doc_id", "participant", "sector", "country", "economy_type", "text")
-raw_docs$raw_text = raw_docs$text
+#raw_docs = raw_docs[,c("v1", "participant", "sector", "country", "economy_type", "output_text")]
+#names(raw_docs) = c("doc_id", "participant", "sector", "country", "economy_type", "text")
+#raw_docs$raw_text = raw_docs$text
 #raw_docs = raw_docs[1:200,]
 as_tibble(head(raw_docs))
 ```
