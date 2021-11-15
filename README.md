@@ -9,7 +9,7 @@ The repository contains our work on extraction pipeline &amp; analysis of corpor
      
 ├──doc
     ├── preliminary_analysis
-    │   ├── exploration_report.ipynb # first attempt
+    │   ├── exploration_report.ipynb
     ├── topic-modeling
     │   ├── 
 
