@@ -68,9 +68,11 @@ def download_docs(docs, path):
     st = datetime.datetime.now()
     if not os.path.exists(path):
         os.mkdir(path)    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=32) as exe: 
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as exe: 
         exe.map(download_doc,  docs.index) # docs.index
     td = (datetime.datetime.now()-st).seconds/60
+    
+    # NOTE ADD STATUS CHECK
     print("The download took {:.2f} mins on the threadpool back-end.".format(td))
 
 def unify_format(docs, path):
@@ -139,7 +141,7 @@ def do_ocr(docs, txt_path, pdf_path):
     docs["OutputText"] = np.nan
     docs["OutputFileName"] = np.nan
     from joblib import Parallel, delayed
-    temp_docs = Parallel(n_jobs=8, backend="loky")(
+    temp_docs = Parallel(n_jobs=6, backend="loky")(
         delayed(pdf2txt)(docs.loc[i,:], txt_path, pdf_path) for i in docs.index)
     docs = pd.concat(temp_docs, axis=1).transpose()    
     td = (datetime.datetime.now()-st).seconds/60
@@ -150,14 +152,15 @@ def do_ocr(docs, txt_path, pdf_path):
     return docs    
 
 if __name__=="__main__":
-    import shutil
-    shutil.rmtree("../../data/raw-reports/",ignore_errors=True)
-    shutil.rmtree("../../data/txt-reports/",ignore_errors=True)
+    raw_path, txt_path = "../../data/raw_reports/", "../../data/txt_reports/"
 
+    import shutil
+    shutil.rmtree(raw_path, ignore_errors=True)
+    shutil.rmtree(txt_path, ignore_errors=True)
     get_tools()
-    docs = get_meta("../../data/un-global-impact.xlsx")
-    docs = docs.iloc[:250,:]
-    download_docs(docs, "../../data/raw-reports/")
-    docs = unify_format(docs, "../../data/raw-reports/")
-    docs = do_ocr(docs, "../../data/txt-reports/", "../../data/raw-reports/")
+    docs = get_meta("../../data/un_global_impact.xlsx")
+    #docs = docs.iloc[:250,:]
+    download_docs(docs, raw_path)
+    docs = unify_format(docs, raw_path)
+    docs = do_ocr(docs, txt_path, raw_path)
     docs.to_pickle("../../data/texts.pkl")
