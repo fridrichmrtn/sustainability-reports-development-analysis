@@ -1,5 +1,7 @@
 /.vscode/
 /env/
 /data/*
-!/data/model-perspective/
 .Rproj.user
+.Rprofile
+.RData
+.Rhistory
