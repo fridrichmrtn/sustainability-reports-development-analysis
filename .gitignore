@@ -1,7 +1,9 @@
 /.vscode/
 /env/
 /data/*
-.Rproj.user
-.Rprofile
-.RData
-.Rhistory
+!/data/model_exports/
+**/.ipynb_checkpoints/
+**.Rproj.user
+**.Rprofile
+**.RData
+**.Rhistory
