@@ -73,7 +73,7 @@ sweep_df$dist = ((1-sweep_df$frex_scaled)^2+(1-sweep_df$semcoh_scaled)^2)^(1/2)
 max_dist =  arrange(sweep_df, dist) %>% select(dist) %>% slice(5) %>% unlist()
 
 plot(x=sweep_df$semcoh_scaled, y=sweep_df$frex_scaled, type='n',
-  main="exclusivity & coherence trade-off",xlab='semantic coherence', ylab='exclusivity',
+  main="exclusivity & coherence trade-off",xlab='semantic coherence', ylab='frex',
   cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
 
 for(r in 1:nrow(sweep_df)){
@@ -105,7 +105,7 @@ plot(stm_model, type="labels", labeltype = "score", main="score",
 ```{r}
 # top docs per topic
 ft = findThoughts(stm_model, texts=out$meta$reconstructed_chars,
-  topics=1:stm_model$settings$dim$K, n=1, meta=out$meta)
+  topics=1:stm_model$settings$dim$K, n=3, meta=out$meta)
 ft_df = lapply(names(ft$index),
   function(x) data.frame(topic = rep(x, length(ft$index[x])),
     index = ft$index[x][[1]])) %>% data.table::rbindlist() %>%

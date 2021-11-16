@@ -9,11 +9,13 @@ The repository contains our work on extraction pipeline &amp; analysis of corpor
      
 ├──doc
     ├── preliminary_analysis
-    │   ├── exploration_report.ipynb
+    │   ├── exploration_report.ipynb # explore data
     ├── topic-modeling
-    │   ├── 
+    │   ├── presentation_example.md # 
 
 ```
 
 ## Links
- * [doc/exploratory_analysis/exploration_report.ipynb](doc/exploratory_analysis/exploration_report.ipynb)
+* [doc/exploratory_analysis/exploration_report.ipynb](doc/exploratory_analysis/exploration_report.ipynb)
+* [doc/topic_modeling/presentation_example.md](doc/topic_modeling/presentation_example.md)
+* [data/model_exports](data/model_exports)
