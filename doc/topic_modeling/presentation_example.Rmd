@@ -38,6 +38,50 @@ out = textProcessor(documents=docs$reconstructed_chars,
 
 ```{r}
 formula = as.formula("~economy_type")
+evaluate_topics = function(k, out, formula){
+  require(stm, quietly=T)
+  fit = stm(documents=out$documents, vocab=out$vocab, data=out$meta,
+    prevalence=formula, verbose=F, K=k, seed=k, max.em.its=750,
+    init.type="Spectral")
+  sc = mean(semanticCoherence(fit, out$documents))
+  frex = mean(exclusivity(fit))
+  return(c(k, sc, frex))}
+
+print("Starting hyperparam sweep for number of topics...")
+st =  Sys.time()
+cl = makeCluster(4)
+sweep_df = parSapply(cl, 5:50,
+  FUN=evaluate_topics, out=out, formula=formula)
+stopCluster(cl)
+print(paste0("The procedure finished in ", format(Sys.time()-st, digits=2) ,"."))
+colnames(sweep_df) = NULL; rownames(sweep_df) = c("k", "semcoh", "frex");
+sweep_df = as.data.frame(t(sweep_df))
+```
+
+```{r frex_coh_tradeoff, fig.width=8, fig.height=4, fig.align="center"}
+# min-max lin scale
+scale_linear = function(x){
+  x_range = range(x)
+  scale_linear = (x-x_range[1])/(x_range[2]-x_range[1])
+  return(scale_linear)}
+
+# scale metrics
+sweep_df[,c("semcoh_scaled", "frex_scaled")] = apply(sweep_df[,c('semcoh','frex')],
+  2, scale_linear)
+# distance from utopia
+sweep_df$dist = ((1-sweep_df$frex_scaled)^2+(1-sweep_df$semcoh_scaled)^2)^(1/2)
+max_dist =  arrange(sweep_df, dist) %>% select(dist) %>% slice(5) %>% unlist()
+
+plot(x=sweep_df$semcoh_scaled, y=sweep_df$frex_scaled, type='n',
+  main="exclusivity & coherence trade-off",xlab='semantic coherence', ylab='exclusivity',
+  cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
+
+for(r in 1:nrow(sweep_df)){
+  text(x=sweep_df$semcoh_scaled[r], y=sweep_df$frex_scaled[r], label=sweep_df$k[r],
+    cex=0.75, col = ifelse(sweep_df$dist[r]<=max_dist,"red","black"))}
+```
+
+```{r}
 n_topics = 8
 stm_model = stm(documents=out$documents, vocab=out$vocab, data=out$meta,
   prevalence=formula, verbose=F, K=n_topics, seed=n_topics, max.em.its=750,
@@ -74,20 +118,19 @@ ft_df[, c("doc_id", "participant", "reconstructed_chars")] %>%
 
 ### Prevalence
 
-```{r topic_prevalence, fig.width=10, fig.height=4, fig.align="center"}
+```{r topic_prevalence, fig.width=8, fig.height=4, fig.align="center"}
 # topic prevalence & props
-par(mar=c(4,1,2,1))
 plot(stm_model, type='summary', labeltype='frex', main="top topics",
   xlab="expected topic proportions", cex.lab=0.8, cex.axis=0.8, text.cex=0.8,
-  cex.main=0.8, n=10)
+  cex.main=0.8, n=5)
 ```
 
 ### Covariates
 
-```{r econ_difference, fig.width=7, fig.height=4, fig.align="center"}
-ee = estimateEffect(1:stm_model$settings$dim$K ~ economy_type, stm_model,
+```{r econ_difference, fig.width=8, fig.height=4, fig.align="center"}
+estimated_effect = estimateEffect(1:stm_model$settings$dim$K ~ economy_type, stm_model,
   meta=out$meta, documents=out$documents, uncertainty="Global", nsims=250)
-plot(ee, model=stm_model, topics=1:stm_model$settings$dim$K, method="difference",
+plot(estimated_effect, model=stm_model, topics=1:stm_model$settings$dim$K, method="difference",
   covariate="economy_type", cov.value1="Advanced", cov.value2 = "Developing",
   xlim=c(-0.15,0.1), verbose.labels=F, main="diff in topical prevalence between adv & dev economies",
   labeltype="custom", custom.labels = paste0("T", 1:stm_model$settings$dim$K),
@@ -129,18 +172,14 @@ ggraph(tc_net, 'kk')+
 
 ### New summary
 
-```{r}
-stmprinter::plot_frex(stm_model)
+```{r stmprinter_docs, fig.width=10, fig.height=8, fig.align="center"}
+stmprinter::plot_thoughts(stm_model, out$meta$reconstructed_chars, n_sentences=25, split_width=62, cutoff = 190)
 ```
 
-```{r}
-stmprinter::plot_thoughts(stm_model, docs$reconstructed_chars, n_sentences=25, split_width=62, cutoff = 190)
-```
-
-```{r}
+```{r jsd_trees, fig.width=8, fig.height=4, fig.align="center"}
 # topics within docs
 plot_jsd_tree = function(mat, n, label){
-  require(dendextend, quietly=T)
+  suppressPackageStartupMessages(require(dendextend, quietly=T))
   hclust = hclust(as.dist(mat), method="ward.D")
   #par(mar=c(5,1,1,20))
   as.dendrogram(hclust) %>% dendextend::set("branches_k_color",
@@ -154,14 +193,15 @@ par(mfrow=c(1,2))
 plot_jsd_tree(doc_dist_mat, 3, "Similarity across documents")
 plot_jsd_tree(voc_dist_mat, 4, "Similarity across vocabulary")
 ```
-```{r}
+
+```{r eval=F}
 # cleanup environment
-rm(list=setdiff(ls(), c("out", "stm_model", "ee")))
+rm(list=setdiff(ls(), c("out", "stm_model", "estimated_effect")))
 # push down image
-save.image("csr_stm_8.RData")
+save.image("../../data/stm_exported.RData")
 ```
 
-```{r}
+```{r eval=F}
 stminsights::run_stminsights()
 ```
 
