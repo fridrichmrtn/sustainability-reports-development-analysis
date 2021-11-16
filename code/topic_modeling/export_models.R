@@ -40,7 +40,6 @@ for (n in n_topics){
   toprint = sprintf("We fit a topic model with %i topics, %i documents and a %i word dictionary.\nIn addition, the model's semantic coherence is %f and its exclusivity is %f. \n", 
     stm_model$settings$dim$K, stm_model$settings$dim$N, stm_model$settings$dim$V,
     mean(semanticCoherence(stm_model, out$documents)), mean(exclusivity(stm_model)))
-  
   sink(paste0(export_dir,"_model_summary.txt"))
   cat(toprint)
   sink()
@@ -96,6 +95,7 @@ for (n in n_topics){
   # correlation map
   corr_mat = Hmisc::rcorr(stm_model$theta)
   edges = which(corr_mat$r>0 & corr_mat$r!=1, arr.ind = T)
+  
   if (length(edges)>0){
     edges_df = as.data.frame(edges)
     edges_df$value = corr_mat$r[edges]
@@ -120,7 +120,9 @@ for (n in n_topics){
     png(filename=paste0(export_dir,"5_corr_network.png"),
         width = 10, height = 4, units="in", res=96)  
     plot(gg)
+    
     dev.off()}
+  
   # push down objects
   save(stm_model, estimated_effects, out,
        file=paste0(export_dir,"stm_artifacts.RData"))}
