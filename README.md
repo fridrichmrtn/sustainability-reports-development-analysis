@@ -5,13 +5,13 @@ The repository contains our work on extraction pipeline &amp; analysis of corpor
 
 ```
 ├──data
-    ├── model_perspective
+    ├── model_exports # perspectives to examine
      
 ├──doc
     ├── preliminary_analysis
     │   ├── exploration_report.ipynb # explore data
     ├── topic-modeling
-    │   ├── presentation_example.md # 
+    │   ├── presentation_example.md # showcase for interpretation tools & hyperopt results
 
 ```
 

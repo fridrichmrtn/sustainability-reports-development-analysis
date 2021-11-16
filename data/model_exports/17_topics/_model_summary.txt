@@ -1,0 +1,2 @@
+We fit a topic model with 17 topics, 2121 documents and a 2313 word dictionary.
+In addition, the model's semantic coherence is -9.455268 and its exclusivity is 9.242702. 
