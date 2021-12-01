@@ -53,7 +53,7 @@ stopCluster(cl)
 print(paste0("The procedure finished in ", format(Sys.time()-st, digits=2) ,"."))
 ```
 
-    ## [1] "The procedure finished in 2.2 hours."
+    ## [1] "The procedure finished in 1.6 hours."
 
 ``` r
 colnames(sweep_df) = NULL; rownames(sweep_df) = c("k", "semcoh", "frex");
@@ -86,7 +86,7 @@ for(r in 1:nrow(sweep_df)){
 <img src="img/modeling_report/frex_coh_tradeoff-1.png" style="display: block; margin: auto;" />
 
 ``` r
-n_topics = 8
+n_topics = 11
 stm_model = stm(documents=out$documents, vocab=out$vocab, data=out$meta,
   prevalence=formula, verbose=F, K=n_topics, seed=n_topics, max.em.its=750,
   init.type="Spectral")
@@ -122,20 +122,20 @@ ft_df[, c("doc_id", "participant", "reconstructed_chars")] %>%
   mutate(reconstructed_chars=substr(reconstructed_chars,1,200)) %>% as_tibble()
 ```
 
-    ## # A tibble: 24 × 3
-    ##    doc_id participant                              reconstructed_chars          
-    ##     <int> <chr>                                    <chr>                        
-    ##  1   1194 Ingenieria y Economia del Transporte ... "annual report annual report…
-    ##  2    659 Curaçao Industrial and International ... "image obtain iso certificat…
-    ##  3   2201 TPER S.p.A.                              "consolidate non financial d…
-    ##  4   2284 Toto Ltd.                                "group integrate report phil…
-    ##  5   1895 ROHM Co., Ltd.                           "note report translation int…
-    ##  6   1143 IDEC Corporation                         "think automation phone repo…
-    ##  7    216 Aareal Bank AG                           "separate combine report sep…
-    ##  8   2156 Svenska Handelsbanken AB (publ)          "found bank branch network w…
-    ##  9    715 Danske Bank Group                        "report eat issue material s…
-    ## 10   2264 Thomson Reuters                          "letter social impact trust …
-    ## # … with 14 more rows
+    ## # A tibble: 33 × 3
+    ##    doc_id participant                            reconstructed_chars            
+    ##     <int> <chr>                                  <chr>                          
+    ##  1   1926 Rexel Group                            "rent fee share capital regist…
+    ##  2   1974 SODEXO IBERIA S.A                      "woe version registration docu…
+    ##  3    325 Ascom Holding AG                       "annual report global solution…
+    ##  4   2274 Tokyo Century Corporation              "century report commitment run…
+    ##  5   1329 Komatsu Ltd.                           "tee eat day wee enhance quali…
+    ##  6   2141 Sumitomo Riko Company Limited          "com eye global excellent manu…
+    ##  7   2156 Svenska Handelsbanken AB (publ)        "found bank branch network way…
+    ##  8   1580 Movestic Livforsakring AB              "sustainability digital develo…
+    ##  9   2053 SharePower Responsible Investing, Inc. "responsible invest die lie pe…
+    ## 10   2355 Viatris                                "global social responsibility …
+    ## # … with 23 more rows
 
 ### Prevalence
 
@@ -161,6 +161,23 @@ plot(estimated_effect, model=stm_model, topics=1:stm_model$settings$dim$K, metho
 ```
 
 <img src="img/modeling_report/econ_difference-1.png" style="display: block; margin: auto;" />
+
+``` r
+# prevalence across the sector
+sector_prevalence = stm_model$theta %>% as.data.frame() %>%
+  mutate(sector=docs$sector) %>% group_by(sector) %>%
+  summarise(across(everything(), mean), n=n()) %>%
+  arrange(desc(n))
+
+par(mfrow=c(2,3))
+for (i in 1:6){
+sector = sector_prevalence$sector[i]
+barplot(as.matrix(sector_prevalence[i,12:2]),
+  names.arg = paste0("T",11:1), xlim=c(0,.45),
+  col="gray", horiz=T, las=1, xlab="expected topical prevalence", main=sector)}
+```
+
+<img src="img/modeling_report/sector_prevalence-1.png" style="display: block; margin: auto;" />
 
 ### Similarity
 
@@ -222,13 +239,13 @@ plot_jsd_tree = function(mat, n, label){
 doc_dist_mat = sqrt(philentropy::JSD(t(stm_model$theta), unit="log10"))
 ```
 
-    ## Metric: 'jensen-shannon' using unit: 'log10'; comparing: 8 vectors.
+    ## Metric: 'jensen-shannon' using unit: 'log10'; comparing: 11 vectors.
 
 ``` r
 voc_dist_mat = sqrt(philentropy::JSD(exp(stm_model$beta$logbeta[[1]]), unit="log10"))
 ```
 
-    ## Metric: 'jensen-shannon' using unit: 'log10'; comparing: 8 vectors.
+    ## Metric: 'jensen-shannon' using unit: 'log10'; comparing: 11 vectors.
 
 ``` r
 par(mfrow=c(1,2))

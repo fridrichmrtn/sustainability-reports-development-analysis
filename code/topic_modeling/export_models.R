@@ -92,6 +92,21 @@ for (n in n_topics){
     xlab = "diff", cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
   dev.off()
   
+  sector_prevalence = stm_model$theta %>% as.data.frame() %>%
+    mutate(sector=docs$sector) %>% group_by(sector) %>%
+    summarise(across(everything(), mean), n=n()) %>%
+    arrange(desc(n))
+  
+  png(filename=paste0(export_dir,"5_sector_prevalence.png"))
+  par(mfrow=c(2,3))
+  for (i in 1:6){
+    sector = sector_prevalence$sector[i]
+    np = n+1
+    barplot(as.matrix(sector_prevalence[i, np:2]),
+            names.ar =paste0("T", n:1), xlim=c(0,.45),
+            col="gray", horiz=T, las=1, xlab="expected topical prevalence", main=sector)}
+  dev.off()
+  
   # correlation map
   corr_mat = Hmisc::rcorr(stm_model$theta)
   edges = which(corr_mat$r>0 & corr_mat$r!=1, arr.ind = T)
@@ -117,7 +132,7 @@ for (n in n_topics){
             legend.title = element_text(size=10), legend.text=element_text(size=8))+
       labs(edge_alpha="Pearson\'s correlation",
            edge_width="Pearson\'s correlation", size="topic prevalance")
-    png(filename=paste0(export_dir,"5_corr_network.png"),
+    png(filename=paste0(export_dir,"6_corr_network.png"),
         width = 10, height = 4, units="in", res=96)  
     plot(gg)
     
