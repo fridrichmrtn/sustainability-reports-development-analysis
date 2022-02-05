@@ -46,16 +46,22 @@ for (n in n_topics){
   
   # topic & labels
   png(filename=paste0(export_dir,"1_topic_prevalence.png"),
-    width = 8, height = ceiling(n/2)+0.5, units="in", res=96)
-  par(mar=c(4,1,2,1))
-  plot(stm_model, type="summary", labeltype="frex", main="top topics",
-    xlab="expected topic proportions", cex.lab=0.8, cex.axis=0.8, text.cex=0.8,
-    cex.main=0.8, n=5)
+    width = 8, height = ceiling(n/2)+0.5, units="in", res=300)
+  #par(mar=c(4,1,2,1))
+  #plot(stm_model, type="summary", labeltype="frex", main="",
+  #  xlab="expected topic proportions", cex.lab=0.8, cex.axis=0.8, text.cex=0.8,
+  #  cex.main=0.8, n=5)
+  
+  topic_prevalence = data.frame(topic=paste0("Topic ", 1:n),
+    prevalence=stm_model$theta%>%colMeans()) %>% arrange(prevalence)
+  par(mar=c(4,6,1,1))
+  barplot(topic_prevalence$prevalence, names.arg=topic_prevalence$topic,
+    horiz=T, las=1, xlim=c(0,0.3), xlab="expected topic proportion")
   dev.off()
   
   # top tokens
   png(filename=paste0(export_dir,"2_topic_tokens.png"),
-    width = 28, height = n, units="in", res=96)  
+    width = 28, height = n, units="in", res=300)  
   par(mfrow=c(1,4), mar=c(1,1,1,1))
   plot(stm_model, type="labels", labeltype = "prob", main="proba",
     cex.main=1.3, text.cex=1.3, n=15)
@@ -84,26 +90,30 @@ for (n in n_topics){
   estimated_effects = estimateEffect(formula, stm_model,
     meta=out$meta, documents=out$documents, uncertainty="Global", nsims=250)
   
-  png(filename=paste0(export_dir,"4_economy_diff.png"))
+  png(filename=paste0(export_dir,"4_economy_diff.png"), units="in", width=8,
+        height=ceiling(n/2)+0.5, res=300)
+  #par(mar=c(1,1,1,1))
   plot(estimated_effects, model=stm_model, topics=1:n, method="difference",
     covariate="economy_type", cov.value1="Advanced", cov.value2 = "Developing",
-    xlim=c(-0.15,0.1), verbose.labels=F, main="diff in topical prevalence between adv & dev economies",
-    labeltype="custom", custom.labels = paste0("T", 1:n),
-    xlab = "diff", cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
+    xlim=c(-0.15,0.15), verbose.labels=F, main="",
+    labeltype="custom", custom.labels = paste0("Topic ", 1:n),
+    xlab = "prevalence difference", cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
   dev.off()
   
   sector_prevalence = stm_model$theta %>% as.data.frame() %>%
     mutate(sector=docs$sector) %>% group_by(sector) %>%
-    summarise(across(everything(), mean), n=n()) %>%
+    dplyr::summarise(across(everything(), mean), n=n()) %>%
     arrange(desc(n))
   
-  png(filename=paste0(export_dir,"5_sector_prevalence.png"))
+  png(filename=paste0(export_dir,"5_sector_prevalence.png"), units="in", width=8,
+      height=ceiling(n/2)+0.5, res=300)
   par(mfrow=c(2,3))
   for (i in 1:6){
     sector = sector_prevalence$sector[i]
     np = n+1
+    #par(mar=c(4,6,4,1))
     barplot(as.matrix(sector_prevalence[i, np:2]),
-            names.ar =paste0("T", n:1), xlim=c(0,.45),
+            names.ar =paste0("Topic ", n:1), xlim=c(0,.45),
             col="gray", horiz=T, las=1, xlab="expected topical prevalence", main=sector)}
   dev.off()
   
@@ -133,7 +143,7 @@ for (n in n_topics){
       labs(edge_alpha="Pearson\'s correlation",
            edge_width="Pearson\'s correlation", size="topic prevalance")
     png(filename=paste0(export_dir,"6_corr_network.png"),
-        width = 10, height = 4, units="in", res=96)  
+        units="in", width = 10, height = 4, res=300)  
     plot(gg)
     
     dev.off()}
