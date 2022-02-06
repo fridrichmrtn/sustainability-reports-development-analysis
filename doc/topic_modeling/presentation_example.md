@@ -53,7 +53,7 @@ stopCluster(cl)
 print(paste0("The procedure finished in ", format(Sys.time()-st, digits=2) ,"."))
 ```
 
-    ## [1] "The procedure finished in 1.6 hours."
+    ## [1] "The procedure finished in 1.5 hours."
 
 ``` r
 colnames(sweep_df) = NULL; rownames(sweep_df) = c("k", "semcoh", "frex");
@@ -75,7 +75,7 @@ sweep_df$dist = ((1-sweep_df$frex_scaled)^2+(1-sweep_df$semcoh_scaled)^2)^(1/2)
 max_dist =  arrange(sweep_df, dist) %>% select(dist) %>% slice(5) %>% unlist()
 
 plot(x=sweep_df$semcoh_scaled, y=sweep_df$frex_scaled, type='n',
-  main="exclusivity & coherence trade-off",xlab='semantic coherence', ylab='frex',
+  main="",xlab='semantic coherence', ylab='frex',
   cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
 
 for(r in 1:nrow(sweep_df)){
@@ -141,9 +141,11 @@ ft_df[, c("doc_id", "participant", "reconstructed_chars")] %>%
 
 ``` r
 # topic prevalence & props
-plot(stm_model, type='summary', labeltype='frex', main="top topics",
-  xlab="expected topic proportions", cex.lab=0.8, cex.axis=0.8, text.cex=0.8,
-  cex.main=0.8, n=5)
+topic_prevalence = data.frame(topic=paste0("Topic ", 1:n_topics),
+  prevalence=stm_model$theta%>%colMeans()) %>% arrange(prevalence)
+par(mar=c(4,6,1,1))
+barplot(topic_prevalence$prevalence, names.arg=topic_prevalence$topic,
+  horiz=T, las=1, xlim=c(0,0.3), xlab="expected topic proportion")
 ```
 
 <img src="img/modeling_report/topic_prevalence-1.png" style="display: block; margin: auto;" />
@@ -153,11 +155,11 @@ plot(stm_model, type='summary', labeltype='frex', main="top topics",
 ``` r
 estimated_effect = estimateEffect(1:stm_model$settings$dim$K ~ economy_type, stm_model,
   meta=out$meta, documents=out$documents, uncertainty="Global", nsims=250)
-plot(estimated_effect, model=stm_model, topics=1:stm_model$settings$dim$K, method="difference",
+plot(estimated_effect, model=stm_model, topics=1:n_topics, method="difference",
   covariate="economy_type", cov.value1="Advanced", cov.value2 = "Developing",
-  xlim=c(-0.15,0.1), verbose.labels=F, main="diff in topical prevalence between adv & dev economies",
-  labeltype="custom", custom.labels = paste0("T", 1:stm_model$settings$dim$K),
-  xlab = "diff", cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
+  xlim=c(-0.15,0.15), verbose.labels=F, main="",
+  labeltype="custom", custom.labels = paste0("Topic ", 1:n_topics),
+  xlab = "prevalence difference", cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
 ```
 
 <img src="img/modeling_report/econ_difference-1.png" style="display: block; margin: auto;" />
@@ -171,10 +173,12 @@ sector_prevalence = stm_model$theta %>% as.data.frame() %>%
 
 par(mfrow=c(2,3))
 for (i in 1:6){
-sector = sector_prevalence$sector[i]
-barplot(as.matrix(sector_prevalence[i,12:2]),
-  names.arg = paste0("T",11:1), xlim=c(0,.45),
-  col="gray", horiz=T, las=1, xlab="expected topical prevalence", main=sector)}
+  sector = sector_prevalence$sector[i]
+  np = n_topics+1
+  #par(mar=c(4,6,4,1))
+  barplot(as.matrix(sector_prevalence[i, np:2]),
+    names.ar =paste0("Topic ", n_topics:1), xlim=c(0,.45),
+    col="gray", horiz=T, las=1, xlab="expected topical prevalence", main=sector)}
 ```
 
 <img src="img/modeling_report/sector_prevalence-1.png" style="display: block; margin: auto;" />

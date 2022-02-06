@@ -10,6 +10,7 @@ This document aims to preprocess the CSsR reports, examine properties of the res
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(fig.path="img/modeling_report/",
   cache.path="cache/modeling_report/")
+
 library(tidyverse)
 library(parallel)
 library(stm)
@@ -36,7 +37,7 @@ out = textProcessor(documents=docs$reconstructed_chars,
 
 ## Structural topic model
 
-```{r}
+```{r cache=T}
 formula = as.formula("~economy_type")
 evaluate_topics = function(k, out, formula){
   require(stm, quietly=T)
@@ -58,7 +59,7 @@ colnames(sweep_df) = NULL; rownames(sweep_df) = c("k", "semcoh", "frex");
 sweep_df = as.data.frame(t(sweep_df))
 ```
 
-```{r frex_coh_tradeoff, fig.width=8, fig.height=4, fig.align="center"}
+```{r frex_coh_tradeoff, fig.width=8, fig.height=6, fig.align="center", dpi=300}
 # min-max lin scale
 scale_linear = function(x){
   x_range = range(x)
@@ -73,7 +74,7 @@ sweep_df$dist = ((1-sweep_df$frex_scaled)^2+(1-sweep_df$semcoh_scaled)^2)^(1/2)
 max_dist =  arrange(sweep_df, dist) %>% select(dist) %>% slice(5) %>% unlist()
 
 plot(x=sweep_df$semcoh_scaled, y=sweep_df$frex_scaled, type='n',
-  main="exclusivity & coherence trade-off",xlab='semantic coherence', ylab='frex',
+  main="",xlab='semantic coherence', ylab='frex',
   cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
 
 for(r in 1:nrow(sweep_df)){
@@ -90,7 +91,7 @@ stm_model = stm(documents=out$documents, vocab=out$vocab, data=out$meta,
 
 ### Labeling
 
-```{r topic_labeling, fig.width=20, fig.height=20, fig.align="center"}
+```{r topic_labeling, fig.width=20, fig.height=20, fig.align="center", dpi=300}
 par(mfrow=c(2,2), mar=c(1,1,1,1))
 plot(stm_model, type="labels", labeltype = "prob", main="proba",
   cex.main=1.5, text.cex=1.3, n=15)
@@ -118,26 +119,28 @@ ft_df[, c("doc_id", "participant", "reconstructed_chars")] %>%
 
 ### Prevalence
 
-```{r topic_prevalence, fig.width=8, fig.height=4, fig.align="center"}
+```{r topic_prevalence, fig.width=8, fig.height=4, fig.align="center", dpi=300}
 # topic prevalence & props
-plot(stm_model, type='summary', labeltype='frex', main="top topics",
-  xlab="expected topic proportions", cex.lab=0.8, cex.axis=0.8, text.cex=0.8,
-  cex.main=0.8, n=5)
+topic_prevalence = data.frame(topic=paste0("Topic ", 1:n_topics),
+  prevalence=stm_model$theta%>%colMeans()) %>% arrange(prevalence)
+par(mar=c(4,6,1,1))
+barplot(topic_prevalence$prevalence, names.arg=topic_prevalence$topic,
+  horiz=T, las=1, xlim=c(0,0.3), xlab="expected topic proportion")
 ```
 
 ### Covariates
 
-```{r econ_difference, fig.width=8, fig.height=4, fig.align="center"}
+```{r econ_difference, fig.width=8, fig.height=4, fig.align="center", dpi=300}
 estimated_effect = estimateEffect(1:stm_model$settings$dim$K ~ economy_type, stm_model,
   meta=out$meta, documents=out$documents, uncertainty="Global", nsims=250)
-plot(estimated_effect, model=stm_model, topics=1:stm_model$settings$dim$K, method="difference",
+plot(estimated_effect, model=stm_model, topics=1:n_topics, method="difference",
   covariate="economy_type", cov.value1="Advanced", cov.value2 = "Developing",
-  xlim=c(-0.15,0.1), verbose.labels=F, main="diff in topical prevalence between adv & dev economies",
-  labeltype="custom", custom.labels = paste0("T", 1:stm_model$settings$dim$K),
-  xlab = "diff", cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
+  xlim=c(-0.15,0.15), verbose.labels=F, main="",
+  labeltype="custom", custom.labels = paste0("Topic ", 1:n_topics),
+  xlab = "prevalence difference", cex.main=0.8, cex.axis=0.8, cex.lab=0.8)
 ```
 
-```{r sector_prevalence, fig.width=8, fig.height=6, fig.align="center"}
+```{r sector_prevalence, fig.width=8, fig.height=6, fig.align="center", dpi=300}
 # prevalence across the sector
 sector_prevalence = stm_model$theta %>% as.data.frame() %>%
   mutate(sector=docs$sector) %>% group_by(sector) %>%
@@ -146,17 +149,19 @@ sector_prevalence = stm_model$theta %>% as.data.frame() %>%
 
 par(mfrow=c(2,3))
 for (i in 1:6){
-sector = sector_prevalence$sector[i]
-barplot(as.matrix(sector_prevalence[i,12:2]),
-  names.arg = paste0("T",11:1), xlim=c(0,.45),
-  col="gray", horiz=T, las=1, xlab="expected topical prevalence", main=sector)}
+  sector = sector_prevalence$sector[i]
+  np = n_topics+1
+  #par(mar=c(4,6,4,1))
+  barplot(as.matrix(sector_prevalence[i, np:2]),
+    names.ar =paste0("Topic ", n_topics:1), xlim=c(0,.45),
+    col="gray", horiz=T, las=1, xlab="expected topical prevalence", main=sector)}
 ```
 
 ### Similarity
 
 The topic model allows for correlation between topics; positive correlation suggests that both subjects are likely to be discussed within one doc. We construct a network with positive correlations between factors.
 
-```{r corr_network, fig.width=8, fig.height=4, fig.align="center"}
+```{r corr_network, fig.width=8, fig.height=4, fig.align="center", dpi=300}
 corr_mat = Hmisc::rcorr(stm_model$theta)
 edges = which(corr_mat$r>0 & corr_mat$r!=1, arr.ind = T)
 edges_df = as.data.frame(edges)
@@ -187,11 +192,11 @@ ggraph(tc_net, 'kk')+
 
 ### New summary
 
-```{r stmprinter_docs, fig.width=10, fig.height=8, fig.align="center"}
+```{r stmprinter_docs, fig.width=10, fig.height=8, fig.align="center", dpi=300}
 stmprinter::plot_thoughts(stm_model, out$meta$reconstructed_chars, n_sentences=25, split_width=62, cutoff = 190)
 ```
 
-```{r jsd_trees, fig.width=8, fig.height=4, fig.align="center"}
+```{r jsd_trees, fig.width=8, fig.height=4, fig.align="center", dpi=300}
 # topics within docs
 plot_jsd_tree = function(mat, n, label){
   suppressPackageStartupMessages(require(dendextend, quietly=T))
